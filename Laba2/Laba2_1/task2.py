@@ -1,13 +1,7 @@
 input_data = input("Введите числа через пробел: ")
 
 words_list = input_data.split()
-num_list = []
-
-for number in words_list:
-    if '.' in number:
-        num_list.append(float(number))
-    else:
-        num_list.append(int(number))
+num_list = [float(x) if '.' in x else int(x) for x in words_list.split()]
 
 unique_numbers = list(set(num_list))
 print("1. Уникальные числа: ", unique_numbers)
