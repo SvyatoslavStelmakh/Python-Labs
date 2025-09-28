@@ -31,10 +31,8 @@ def sum(a, b):
 def composition(a, b):
     return a * b
 
-# тестируем
-if __name__ == "__main__":
-    sum(5, 3)
-    composition(5, 3)
-    sum(10, 20)
-    composition(10, 20)
-    sum(1, 2)
+sum(5, 3)
+composition(5, 3)
+sum(10, 20)
+composition(10, 20)
+sum(1, 2)
