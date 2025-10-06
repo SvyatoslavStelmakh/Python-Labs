@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 import functools
 
 def log_calls(filename):
@@ -7,17 +7,18 @@ def log_calls(filename):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
            
-            current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")     # получаем текущее время
+            now = datetime.now()
+            current_time = now.strftime("%H:%M:%S")     # получаем текущее время
             
             # формируем строку с аргументами
-            args_str = ", ".join([repr(arg) for arg in args])
-            kwargs_str = ", ".join([f"{key}={repr(value)}" for key, value in kwargs.items()])
-            all_args = ", ".join(filter(None, [args_str, kwargs_str]))
+            args_str = ", ".join([str(arg) for arg in args])
+            kwargs_str = ", ".join([f"{key}={str(value)}" for key, value in kwargs.items()])
+            all_args = ", ".join([args_str, kwargs_str])
             
             # записываем в файл
-            with open(filename, 'a', encoding='utf-8') as f:
+            with open(filename, 'a', encoding='utf-8') as file:
                 log_line = f"[{current_time}] {func.__name__}({all_args})\n"
-                f.write(log_line)
+                file.write(log_line)
             
             return func(*args, **kwargs)
         return wrapper

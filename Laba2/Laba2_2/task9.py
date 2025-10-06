@@ -4,7 +4,7 @@ def type_check(*expected_types):
     
     def decorator(func):
         @functools.wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args):
             # Проверяем позиционные аргументы
             for i in range(min(len(args), len(expected_types))):
                 arg = args[i]
@@ -14,7 +14,7 @@ def type_check(*expected_types):
                         f"Аргумент {i + 1} ({arg}) имеет тип {type(arg).__name__}, "
                         f"но ожидается {expected_type.__name__}"
                     )
-            return func(*args, **kwargs)
+            return func(*args)
         return wrapper
     return decorator
 

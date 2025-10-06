@@ -14,7 +14,8 @@ def unique_elements(nested_list):
     
     return list(unique_set)
 
-# пример работы функции
+print("Пример работы функции")
 list1 = [1, 2, 3, [4, 3, 1], 5, [6, [7, [10], 8, [9, 2, 3]]]]
+print(f"Исходный список: {list1}")
 result = unique_elements(list1)
-print(result)
+print(f"Уникальные элементы: {result}")
