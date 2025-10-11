@@ -27,15 +27,7 @@ class Bank_account():
         self.currency = currency
         self.transactions = []
     
-    # Метод для проверки баланса
-    @property
-    def balance(self):
-        return self.balance
     
-    @balance.setter
-    def balance(self, balance):
-        self.balance = balance
-
     # Метод для пополнения баланса
     def deposit(self, amount):
 
@@ -92,7 +84,7 @@ class Client():
       def __init__(self, client_id, name):
         self.client_id = client_id
         self.name = name
-        self.accounts = []
+        self.accounts = []      # список который хранит ID счетов клиента
         
 class Bank():
     def __init__(self, name):
@@ -123,10 +115,11 @@ class Bank():
                 raise AccountExistsError(f"У клиента уже есть счет в валюте {currency}")
         
         account_id = self.next_account_id
+
         account = Bank_account(account_id, client_id, currency)
         
-        self.accounts[account_id] = account
-        client.accounts.append(account_id)
+        self.accounts[account_id] = account     # добавляем в словарь ID счета в виде ключа и объект класса Bank_account
+        client.accounts.append(account_id)      # добавляем в список который хранит IDшники счетов айди нового счета
         self.next_account_id += 1
         
         return account_id
@@ -216,7 +209,7 @@ class Bank():
         if from_account.currency != to_account.currency:
             raise TransferError("Невозможно перевести средства на счет в другой валюте")
         
-        if from_account.client_id == to_account_id.client_id:
+        if from_account.client_id == to_account.client_id:
             raise TransferError("Невозможно перевести средства на свой же счет")
         
         if from_account.client_id != client_id:
@@ -247,7 +240,6 @@ class Bank():
                 'Баланс': account.balance,
             }
             statement['Счета'].append(account_info)
-            total_balance += account.balance
                 
         return statement    
     
@@ -349,7 +341,7 @@ def main():
                 currency = input("Введите валюту счета: ").strip().upper()
                     
                 if currency not in ["BYN", "RUB", "USD", "EUR"]:
-                    print("Ошибка: Поддерживаются только BYN, RUB, USD, EUR.")
+                    print("Ошибка: счет можно открыть только в BYN, RUB, USD, EUR.")
                     input("Нажмите Enter для продолжения...")
                 else:
                     try:
@@ -436,10 +428,8 @@ def main():
                         
                     print(f"\nПеревод успешно выполнен!")
                     print(f"Переведено: {amount:.2f} {from_account.currency}")
-                    print(f"Со счета {from_account_id}: {from_account.balance:.2f} {from_account.currency}")
-                    print(f"На счет {to_account_id}: {to_account.balance:.2f} {to_account.currency}")
                     input("\nНажмите Enter для продолжения...")
-                except (ValueError, PermissionError, InsufficientFundsError) as e:
+                except (ValueError, PermissionError, InsufficientFundsError, TransferError) as e:
                     print(f"Ошибка: {e}")
                     input("Нажмите Enter для продолжения...")
                 except ValueError:
@@ -458,8 +448,8 @@ def main():
                 try:
                     print(bank.generate_account_statement(current_client_id))
                     input("\nНажмите Enter для продолжения...")
-                except Exception as e:
-                    print(f"Ошибка при выводе выписки")
+                except (Exception, ClientNotFoundError) as e:
+                    print(f"Ошибка: {e}")
                     input("Нажмите Enter для продолжения...")
                 
             elif choice == "8":
@@ -473,7 +463,6 @@ def main():
                 print("Неверный выбор. Попробуйте снова.")
                 input("Нажмите Enter для продолжения...")
             
-
 
 if __name__ == "__main__":
     main()
