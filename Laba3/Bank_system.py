@@ -1,4 +1,4 @@
-import random
+from datetime import datetime
 
 class AccountNotFoundError(Exception):
     pass
@@ -35,10 +35,11 @@ class Bank_account():
             raise ValueError("Сумма пополнения должна быть положительной")
         
         self.balance += amount
+        
         self.transactions.append({
-            'type': 'deposit',
-            'amount': amount,
-            'balance_after': self.balance})
+            'тип': 'депозит',
+            'время': datetime.now(),
+            'сумма': amount})
         
     # Метод для снятия средств со счёта
     def withdraw(self, amount):
@@ -50,6 +51,11 @@ class Bank_account():
                 f"Баланс: {self.balance}, Запрошено: {amount:.2f}"
             )
         
+        self.transactions.append({
+            'тип': 'снятие',
+            'время': datetime.now(),
+            'сумма': amount})
+
         self.balance -= amount
     
     # Метод для перевода на другой счет
@@ -65,18 +71,18 @@ class Bank_account():
         self.balance -= amount
         self.transactions.append({
             'тип': 'перевод',
-            'сумма': amount,
-            'счет получателя': target_account.account_id,
-            'баланс после перевода': self.balance
+            'время': datetime.now(),
+            'сумма перевода': amount,
+            'счет получателя': target_account.account_id
         })
         
         # Зачисляем на целевой счет
         target_account.balance += amount
         target_account.transactions.append({
             'тип': 'поступление',
+            'время': datetime.now(),
             'сумма': amount,
-            'счет оправителя': self.account_id,
-            'баланс после поступления': target_account.balance
+            'счет оправителя': self.account_id
         })
 
 class Client():
@@ -146,17 +152,6 @@ class Bank():
         client = self.clients[client_id]
         client.accounts.remove(account_id)
         del self.accounts[account_id]
-
-    # Метод для получение всех счетов клиента
-    def get_client_accounts(self, client_id):
-        if client_id not in self.clients:
-            raise ClientNotFoundError("Клиент не найден")
-        
-        client_accounts = []        # список для счетов клиента
-        for account_id in self.clients[client_id].accounts:
-            client_accounts.append(self.accounts[account_id])
-        
-        return client_accounts
     
     # Метод для поиска счета клиента по валюте
     def find_account_by_currency(self, client_id, currency):
@@ -217,31 +212,42 @@ class Bank():
         
         from_account.transfer(to_account, amount)
 
+    # Метод для получение всех счетов клиента
+    def get_client_accounts(self, client_id):
+        if client_id not in self.clients:
+            raise ClientNotFoundError("Клиент не найден")
+        
+        client_accounts = []        # список для счетов клиента
+        for account_id in self.clients[client_id].accounts:
+            client_accounts.append(self.accounts[account_id])
+        
+        return client_accounts
+
     # Метод для создания выписки по всем счетам пользователя
     def generate_account_statement(self, client_id):
     
         if client_id not in self.clients:
             raise ClientNotFoundError("Клиент не найден")
         
-        accounts = self.get_client_accounts(client_id)
+        client_accounts = self.get_client_accounts(client_id)
         client = self.clients[client_id]
         
-        statement = {
-            'ID клиента': client.client_id,
-            'Имя клиента': client.name,
-            'Счета': []
-        }
+        print(f"ID клиента: {client.client_id}")
+        print(f"Имя клиента: {client.name}")
+        print("Счета клиента")
+        print(' '.join(client.accounts))
         
-       
-        for account in accounts:
-            account_info = {
-                'ID аккаунта': account.account_id,
-                'Валюта': account.currency,
-                'Баланс': account.balance,
-            }
-            statement['Счета'].append(account_info)
-                
-        return statement    
+        for account in client_accounts:
+            print(f"ID аккаунта: {account.account_id}")
+            print(f"Валюта: {account.currency}")
+            print(f"Баланс: {account.balance}")
+            print("\nИстория транзакций")
+            for transaction in account.transactions:
+                print(transaction)
+
+           
+
+    
     
 # Функция для вывода счетов пользователя
 def display_accounts(bank, client_id):
