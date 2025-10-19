@@ -38,7 +38,7 @@ class Bank_account():
         
         self.transactions.append({
             'тип': 'депозит',
-            'время': datetime.now(),
+            'время': datetime.now().strftime("%d.%m.%Y %H:%M"),
             'сумма': amount})
         
     # Метод для снятия средств со счёта
@@ -52,8 +52,8 @@ class Bank_account():
             )
         
         self.transactions.append({
-            'тип': 'снятие',
-            'время': datetime.now(),
+            'тип': 'снятие средств',
+            'время': datetime.now().strftime("%d.%m.%Y %H:%M"),
             'сумма': amount})
 
         self.balance -= amount
@@ -71,7 +71,7 @@ class Bank_account():
         self.balance -= amount
         self.transactions.append({
             'тип': 'перевод',
-            'время': datetime.now(),
+            'время': datetime.now().strftime("%d.%m.%Y %H:%M"),
             'сумма перевода': amount,
             'счет получателя': target_account.account_id
         })
@@ -80,7 +80,7 @@ class Bank_account():
         target_account.balance += amount
         target_account.transactions.append({
             'тип': 'поступление',
-            'время': datetime.now(),
+            'время': datetime.now().strftime("%d.%m.%Y %H:%M"),
             'сумма': amount,
             'счет оправителя': self.account_id
         })
@@ -235,20 +235,21 @@ class Bank():
         print(f"ID клиента: {client.client_id}")
         print(f"Имя клиента: {client.name}")
         print("Счета клиента")
-        print(' '.join(client.accounts))
+        if len(client.accounts) == 0:
+            print("У вас нет открытых счетов")
+        else:
+            for acc_id in client.accounts:
+                print(acc_id, end = ' ')
         
         for account in client_accounts:
-            print(f"ID аккаунта: {account.account_id}")
+            print(f"\nID счета: {account.account_id}")
             print(f"Валюта: {account.currency}")
             print(f"Баланс: {account.balance}")
-            print("\nИстория транзакций")
+            print("История транзакций")
             for transaction in account.transactions:
                 print(transaction)
 
            
-
-    
-    
 # Функция для вывода счетов пользователя
 def display_accounts(bank, client_id):
     
@@ -356,7 +357,7 @@ def main():
                         print(f"Номер счета: {account_id}")
                         print(f"Валюта: {currency}")
                         input("\nНажмите Enter для продолжения...")
-                    except ValueError as e:
+                    except (ValueError, AccountExistsError) as e:
                         print(f"Ошибка: {e}")
                         input("Нажмите Enter для продолжения...")
                 
@@ -370,7 +371,7 @@ def main():
                     bank.close_account(current_client_id, account_id)
                     print(f"\nСчет №{account_id} успешно закрыт!")
                     input("Нажмите Enter для продолжения...")
-                except (ValueError, PermissionError) as e:
+                except (PermissionError, AccountNotFoundError) as e:
                     print(f"Ошибка: {e}")
                     input("Нажмите Enter для продолжения...")
                 except ValueError:
