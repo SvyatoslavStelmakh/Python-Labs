@@ -7,11 +7,11 @@ fig, ax = plt.subplots()    # создаем фигуру и оси(област
 
 # Лапы
 leg1 = Ellipse((2.9, 2.1), 0.8, 2.2, angle=-30, facecolor='#8B4513', edgecolor='#654321', linewidth=1)
-leg2 = Ellipse((3.2, 2.1), 0.8, 2.2, facecolor='#8B4513', edgecolor='#654321', linewidth=1)
-leg3 = Ellipse((6.7, 2.1), 0.8, 2.2, angle=5, facecolor='#8B4513', edgecolor='#654321', linewidth=1)
+leg2 = Ellipse((3.2, 2.1), 0.8, 2.2, facecolor="#743A11", edgecolor='#654321', linewidth=1)
+leg3 = Ellipse((6.7, 2.1), 0.8, 2.2, angle=5, facecolor="#7A3E13", edgecolor='#654321', linewidth=1)
 leg4 = Ellipse((6.9, 2.1), 0.8, 2.2, angle=24, facecolor='#8B4513', edgecolor='#654321', linewidth=1)
-ax.add_patch(leg1)
 ax.add_patch(leg2)
+ax.add_patch(leg1)
 ax.add_patch(leg3)
 ax.add_patch(leg4)
 
@@ -22,6 +22,12 @@ ax.add_patch(tail)
 # Тело собаки
 body = Ellipse((5, 3), 5.6, 2, facecolor='#8B4513', edgecolor='#654321', linewidth=2)
 ax.add_patch(body)
+
+# Уши
+left_ear = Ellipse((1.1, 4.9), 0.8, 2, angle=-43, facecolor="#783C11", edgecolor='#654321', linewidth=2)
+
+ax.add_patch(left_ear)
+
 
 # Голова
 head = Circle((2.2, 4.4), 1.2, facecolor='#8B4513', edgecolor='#654321', linewidth=2)
@@ -51,10 +57,7 @@ right_glint = Circle((2.5, 4.8), 0.18, facecolor='black')
 ax.add_patch(left_glint)
 ax.add_patch(right_glint)
 
-# Уши
-left_ear = Ellipse((1.1, 4.9), 0.8, 2, angle=-40, facecolor='#8B4513', edgecolor='#654321', linewidth=2)
-right_ear = Ellipse((2.9, 4.8), 1, 1.8, angle=30, facecolor='#8B4513', edgecolor='#654321', linewidth=2)
-ax.add_patch(left_ear)
+right_ear = Ellipse((3.1, 4.8), 1, 1.8, angle=30, facecolor='#8B4513', edgecolor='#654321', linewidth=2)
 ax.add_patch(right_ear)
 
 # Пятна на теле для реалистичности
