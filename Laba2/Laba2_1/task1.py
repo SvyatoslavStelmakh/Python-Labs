@@ -13,7 +13,7 @@ for word in words:
 
 unique_words = 0
 
-print("1. Словарь {слово: количество}:")
+print("Словарь {слово: количество}:")
 for word, count in word_dict.items():
     print(f"   '{word}': {count}")
     if count == 1:
