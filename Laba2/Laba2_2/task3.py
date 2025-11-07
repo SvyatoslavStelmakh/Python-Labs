@@ -25,8 +25,8 @@ def log_calls(filename):
     return decorator
 
 @log_calls("function_calls.log")
-def sum(a, b):
-    return a + b
+def sum(*args):
+    return sum(args)
 
 @log_calls("function_calls.log")
 def composition(a, b):

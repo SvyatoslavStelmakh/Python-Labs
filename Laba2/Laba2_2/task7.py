@@ -24,17 +24,16 @@ def merge_sorted_list(list1, list2):
     
     return result
 
+input_data = input("Введите первый список через пробел: ")
+list1 = sorted(input_data.split())
+
+input_data = input("Введите второй список через пробел: ")
+list2 = sorted(input_data.split())
+
 print("Примеры работы функции")
-list1 = [1, 3, 5, 7]
-list2 = [2, 4, 6, 8]
 merged = merge_sorted_list(list1, list2)
 print(f"list1: {list1}")
 print(f"list2: {list2}")
 print(f"merged: {merged}")
 
-list3 = []
-list4 = [1, 2, 3]
-merged2 = merge_sorted_list(list3, list4)
-print(f"\nlist3: {list3}")
-print(f"list4: {list4}")
-print(f"merged: {merged2}")
+
