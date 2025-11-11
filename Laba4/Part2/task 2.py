@@ -41,4 +41,4 @@ if __name__ == "__main__":
     start = int(input("Номер участка въезда (k): "))
     end = int(input("Номер участка съезда (p): "))
    
-    calculate_journey()
+    calculate_journey(lengths, speeds, start, end)
