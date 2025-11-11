@@ -205,3 +205,13 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+Laba4/Part2/venv_part2/pyvenv.cfg
+Laba4/Part2/venv_part2/Scripts/activate
+Laba4/Part2/venv_part2/Scripts/activate.bat
+Laba4/Part2/venv_part2/Scripts/Activate.ps1
+Laba4/Part2/venv_part2/Scripts/deactivate.bat
+Laba4/Part2/venv_part2/Scripts/pip.exe
+Laba4/Part2/venv_part2/Scripts/pip3.10.exe
+Laba4/Part2/venv_part2/Scripts/pip3.exe
+Laba4/Part2/venv_part2/Scripts/python.exe
+Laba4/Part2/venv_part2/Scripts/pythonw.exe
