@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from matplotlib.patches import Circle, Ellipse, Rectangle, Polygon
+from matplotlib.patches import Circle, Ellipse
 import numpy as np
 
 
