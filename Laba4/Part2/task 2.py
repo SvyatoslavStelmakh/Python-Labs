@@ -27,7 +27,7 @@ def calculate_journey(lengths, speeds, start, end):
     
     print(f"\nS = {distance:.2f} км")
     print(f"T = {total_time:.2f} час")
-    print(f"<V> {average_speed:.2f} км/ч")
+    print(f"<V> = {average_speed:.2f} км/ч")
     
 
 if __name__ == "__main__":
