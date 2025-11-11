@@ -8,13 +8,14 @@ def solve_system_equations(A, B):
 
     if abs(det_A) < 1e-10:
         print("Матрица вырожденная, решение не существует")
+        X = None
         return
     else:
-        A_inv = np.linalg.inv(A)    # вычисляем обратную матрицу
+        A_inv = linalg.inv(A)    # вычисляем обратную матрицу
     
         X = np.dot(A_inv, B)        # вычисляем вектор-решение системы
     
-        return
+        return X
 
 if __name__ == "__main__":
 
@@ -29,8 +30,8 @@ if __name__ == "__main__":
 
     result = solve_system_equations(A, B)
 
-    if result:
+    if result.any():
         print("\nРешение системы:")
-        print("X = {result}")
+        print(f"X = {np.round(result, 1)}")
 
     
