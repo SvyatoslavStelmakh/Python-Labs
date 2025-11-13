@@ -8,7 +8,7 @@ df.columns = ['дата покупки', 'дата совершения пере
 
 print("ПЕРИОД ВРЕМЕНИ ДАТАСЕТА:")
 
-# Преобразование дат в правильный форма
+# Преобразование дат в правильный формат
 df['дата покупки'] = pd.to_datetime(df['дата покупки'])
 df['дата совершения перелета'] = pd.to_datetime(df['дата совершения перелета'])
 
@@ -58,10 +58,6 @@ plt.show()
 route_counts = df.groupby(['город отправления', 'город назначения']).size().reset_index(name='counts').sort_values(by='counts', ascending=False).head(5)
 print("Топ-5 популярных маршрутов:")
 print(route_counts)
-
-# Преобразование дат в формат datetime
-df['дата покупки'] = pd.to_datetime(df['дата покупки'])
-df['дата совершения перелета'] = pd.to_datetime(df['дата совершения перелета'])
 
 monthly_sales = df.groupby(df['дата покупки'].dt.to_period('M')).size()   # количество продаж в месяц 
 monthly_revenue = df.groupby(df['дата покупки'].dt.to_period('M'))['сумма'].sum()    # сумма продаж в месяц
