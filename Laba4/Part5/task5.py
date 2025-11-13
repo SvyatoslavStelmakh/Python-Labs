@@ -1,11 +1,23 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
-df = pd.read_excel('lab_4_part_5.xlsx', sheet_name='Данные')
+import sys
+sys.setrecursionlimit(10000)
+
+df = pd.read_excel('lab_4_part_5.xlsx', sheet_name='Данные', usecols='B:J', skiprows=1)
+df = df.dropna(axis=0, how='all')   # удаляем полностью пустые строки
+df = df.fillna(0)
+
+# Просмотр структуры данных
+print("Информация о данных:")
+print(df.info())
+print("\nПервые 5 строк:")
+print(df.head())
+print("\nСтатистика по данным:")
+print(df.describe())
 
 # Преобразование даты
 df['Дата'] = pd.to_datetime(df['Дата'])
@@ -16,23 +28,85 @@ df['Квартал'] = df['Дата'].dt.quarter
 df['Прибыль'] = df['Продажи'] - df['Себестоимость']
 df['Средняя цена'] = (df['Продажи'] / df['Количество']).round(2)
 
-# Общая динамика продаж
-fig, axes = plt.subplots(1, 2, figsize=(15, 12))
+print("=== ОБЩАЯ ДИНАМИКА ТОВАРООБОРОТА ===")
 
-# Динамика продаж по месяцам
-monthly_sales = df.groupby(df['Дата'].dt.to_period('M'))[['Продажи', 'Себестоимость', 'Прибыль']].sum()
+# Месячная динамика
+print("Месячная динамика:")
+monthly_sales = df.groupby(['Год', 'Месяц']).agg({
+    'Продажи': 'sum',
+    'Количество': 'sum',
+    'Себестоимость': 'sum',
+    'Прибыль': 'sum'
+}).reset_index()
 
-ax1 = axes[0, 0]
-monthly_sales.plot(ax1, title='Динамика продаж по месяцам')
-ax1.set_ylabel('Рублей')
+monthly_sales['Период'] = monthly_sales['Год'].astype(str) + '-' + monthly_sales['Месяц'].astype(str).str.zfill(2)
+print(monthly_sales)
 
-# Динамика количества продаж
-monthly_qty = df.groupby(df['Дата'].dt.to_period('M'))['Количество'].sum()
+# Анализ по точкам реализации
+print("\n=== АНАЛИЗ ПО ТОЧКАМ РЕАЛИЗАЦИИ ===")
 
-ax2 = axes[0, 1]
-monthly_qty.plot(ax2, title='Динамика количества продаж', color='green')
-ax1.set_ylabel('Количество')
+point_analysis = df.groupby('точка').agg({
+    'Продажи': ['sum', 'mean', 'std'],
+    'Количество': ['sum', 'mean', 'std'],
+    'Прибыль': ['sum', 'mean']
+}).round(2)
 
+point_analysis.columns = ['_'.join(col).strip() for col in point_analysis.columns.values]
+print(point_analysis)
+
+# Анализ по брендам
+print("\n=== АНАЛИЗ ПО БРЕНДАМ ===")
+
+brand_analysis = df.groupby('бренд').agg({
+    'Продажи': ['sum', 'mean'],
+    'Количество': ['sum', 'mean'],
+    'Прибыль': ['sum', 'mean'],
+    'Средняя цена': 'mean'
+}).round(2)
+
+brand_analysis.columns = ['_'.join(col).strip() for col in brand_analysis.columns.values]
+print(brand_analysis)
+
+# Анализ по товарам
+print("\n=== АНАЛИЗ ПО ТОВАРАМ ===")
+
+product_analysis = df.groupby('товар').agg({
+    'Продажи': ['sum', 'mean'],
+    'Количество': ['sum', 'mean'],
+    'Прибыль': ['sum', 'mean'],
+    'Средняя цена': 'mean'
+}).round(2)
+
+product_analysis.columns = ['_'.join(col).strip() for col in product_analysis.columns.values]
+print(product_analysis.sort_values('Продажи_sum', ascending=False).head(10))
+
+# ОБЩАЯ ДИНАМИКА ПРОДАЖ
+fig, axes = plt.subplots(1, 2, figsize=(16, 8))
+
+monthly_sales = df.groupby(df['Год-мес'])['Продажи'].sum()
+monthly_profit = df.groupby(df['Год-мес'])['Прибыль'].sum()
+monthly_cost = df.groupby(df['Год-мес'])['Себестоимость'].sum()
+monthly_qty = df.groupby(df['Год-мес'])['Количество'].sum()
+
+axes[0].plot(monthly_sales.index.astype(str), monthly_sales.values, label='Продажи')
+axes[0].set_title('Динамика продаж по месяцам')
+axes[0].set_ylabel('Рублей')
+
+axes[1].plot(monthly_sales.index.astype(str), monthly_cost.values, label='Себестоимость')
+axes[1].set_title('Динамика себестоимости по месяцам')
+axes[1].set_ylabel('Рублей')
+plt.tight_layout()
+plt.show()
+
+
+fig, axes = plt.subplots(1, 2, figsize=(16, 8))
+axes[0].plot(monthly_sales.index.astype(str), monthly_profit.values, label='Прибыль')
+axes[0].set_title('Динамика прибыли по месяцам')
+axes[0].set_ylabel('Рублей')
+
+axes[1].plot(monthly_qty.index.astype(str), monthly_qty.values, color='green')
+axes[1].set_ylabel('Количество')
+axes[1].tick_params(axis='x', rotation=45)
 plt.tight_layout()
 plt.show()
 
@@ -96,7 +170,6 @@ plt.show()
 
 # ПРОГНОЗИРОВАНИЕ ДЛЯ КАЖДОГО ТОВАРА
 def forecast_product_sales(product_data, product_name, periods=6):
-    """Функция для прогнозирования продаж товара"""
     if len(product_data) < 6:
         return None, None, None
     
