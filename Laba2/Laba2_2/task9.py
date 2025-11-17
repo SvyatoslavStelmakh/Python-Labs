@@ -19,8 +19,8 @@ def type_check(*expected_types):
     return decorator
 
 @type_check(int, int)
-def sum(a, b):
-    return a + b
+def sum(*args):
+    return sum(args)
 
 print("Проверка декоратора @type_check")
 
