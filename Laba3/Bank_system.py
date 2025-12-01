@@ -20,7 +20,7 @@ class TransferError(Exception):
 
 class Bank_account():
     
-    def __init__(self, account_id, client_id,  currency, balance = 0.0):
+    def __init__(self, account_id, client_id, currency, balance = 0.0):
         self.account_id = account_id
         self.client_id = client_id
         self.balance = balance
@@ -48,7 +48,7 @@ class Bank_account():
         elif amount > self.balance:
             raise InsufficientFundsError(
                 f"Недостаточно средств на счете ({self.currency}). "
-                f"Баланс: {self.balance}, Запрошено: {amount:.2f}"
+                f"Баланс: {self.balance:.2f}, Запрошено: {amount:.2f}"
             )
         
         self.transactions.append({
@@ -95,7 +95,7 @@ class Client():
 class Bank():
     def __init__(self, name):
         self.name = name
-        self.accounts = {}      # словарь, который будет хранить счеты всех клиентов
+        self.accounts = {}      # словарь, который будет хранить счета всех клиентов
         self.clients = {}       # словарь, который будет хранить всех клиентов банка
         self.next_account_id = 1
         self.next_client_id = 1
@@ -166,7 +166,7 @@ class Bank():
     def deposit_to_account(self, client_id, account_id, amount):
         
         if account_id not in self.accounts:
-            raise ValueError("Счет не найден")
+            raise AccountNotFoundError("Счет не найден")
         
         account = self.accounts[account_id]
         
@@ -392,7 +392,7 @@ def main():
                     print(f"Счет пополнен на {amount:.2f} {account.currency}")
                     print(f"Текущий баланс: {account.balance:.2f} {account.currency}")
                     input("\nНажмите Enter для продолжения...")
-                except (ValueError, PermissionError) as e:
+                except PermissionError as e:
                     print(f"Ошибка: {e}")
                     input("Нажмите Enter для продолжения...")
                 except ValueError:
@@ -413,7 +413,7 @@ def main():
                     print(f"Со счета снято {amount:.2f} {account.currency}")
                     print(f"Текущий баланс: {account.balance:.2f} {account.currency}")
                     input("\nНажмите Enter для продолжения...")
-                except (ValueError, PermissionError, InsufficientFundsError) as e:
+                except (PermissionError, InsufficientFundsError) as e:
                     print(f"Ошибка: {e}")
                     input("Нажмите Enter для продолжения...")
                 except ValueError:
@@ -431,12 +431,11 @@ def main():
                     amount = float(input("Введите сумму перевода: "))
                     bank.transfer_between_accounts(current_client_id, from_account_id, to_account_id, amount)
                     from_account = bank.accounts[from_account_id]
-                    to_account = bank.accounts[to_account_id]
                         
                     print(f"\nПеревод успешно выполнен!")
                     print(f"Переведено: {amount:.2f} {from_account.currency}")
                     input("\nНажмите Enter для продолжения...")
-                except (ValueError, PermissionError, InsufficientFundsError, TransferError) as e:
+                except (PermissionError, InsufficientFundsError, TransferError) as e:
                     print(f"Ошибка: {e}")
                     input("Нажмите Enter для продолжения...")
                 except ValueError:
