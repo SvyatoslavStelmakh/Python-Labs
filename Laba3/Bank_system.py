@@ -374,8 +374,8 @@ def main():
                 except (PermissionError, AccountNotFoundError) as e:
                     print(f"Ошибка: {e}")
                     input("Нажмите Enter для продолжения...")
-                except ValueError:
-                    print("Ошибка: Номер счета должен быть числом.")
+                except ValueError as e:
+                    print(f"Ошибка: {e}")
                     input("Нажмите Enter для продолжения...")
                 
             elif choice == "3":
