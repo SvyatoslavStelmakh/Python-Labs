@@ -3,13 +3,38 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, mean_squared_error
-
 import sys
+from openpyxl import load_workbook
+
 sys.setrecursionlimit(10000)
 
-df = pd.read_excel('lab_4_part_5.xlsx', sheet_name='Данные', usecols='B:J', skiprows=1)
-df = df.dropna(axis=0, how='all')   # удаляем полностью пустые строки
-df = df.fillna(0)
+# Читаем данные, начиная со строки 3 (skiprows=2 пропускает первые 2 строки)
+df = pd.read_excel('lab_4_part_5.xlsx', 
+                   sheet_name='Данные',
+                   usecols='B:J',  # колонки B-J
+                   skiprows=2,     # пропускаем 2 строки (строки 1 и 2)
+                   engine='openpyxl')
+
+# Назначаем имена колонкам (так как пропустили заголовки)
+df.columns = ['Дата', 'Год', 'Год-мес', 'точка', 'бренд', 'товар', 
+              'Количество', 'Продажи', 'Себестоимость']
+
+# Удаляем полностью пустые строки
+df = df.dropna(how='all')
+
+# Проверяем и конвертируем типы данных
+print("\nТипы данных перед конвертацией:")
+print(df.dtypes)
+
+# Преобразование даты
+df['Дата'] = pd.to_datetime(df['Дата'])
+
+# Преобразование числовых колонок
+numeric_cols = ['Год', 'Год-мес', 'Количество', 'Продажи', 'Себестоимость']
+for col in numeric_cols:
+    if col in df.columns:
+        # Сначала конвертируем в строку, затем в число (для обработки формул)
+        df[col] = pd.to_numeric(df[col], errors='coerce')
 
 # Просмотр структуры данных
 print("Информация о данных:")
@@ -81,33 +106,37 @@ product_analysis.columns = ['_'.join(col).strip() for col in product_analysis.co
 print(product_analysis.sort_values('Продажи_sum', ascending=False).head(10))
 
 # ОБЩАЯ ДИНАМИКА ПРОДАЖ
-fig, axes = plt.subplots(1, 2, figsize=(16, 8))
 
-monthly_sales = df.groupby(df['Год-мес'])['Продажи'].sum()
-monthly_profit = df.groupby(df['Год-мес'])['Прибыль'].sum()
-monthly_cost = df.groupby(df['Год-мес'])['Себестоимость'].sum()
-monthly_qty = df.groupby(df['Год-мес'])['Количество'].sum()
+monthly_sales = df.groupby('Год-мес')['Продажи'].sum()
+monthly_profit = df.groupby('Год-мес')['Прибыль'].sum()
+monthly_cost = df.groupby('Год-мес')['Себестоимость'].sum()
+monthly_qty = df.groupby('Год-мес')['Количество'].sum()
 
-axes[0].plot(monthly_sales.index.astype(str), monthly_sales.values, label='Продажи')
-axes[0].set_title('Динамика продаж по месяцам')
-axes[0].set_ylabel('Рублей')
+plt.figure(figsize=(10, 6))
 
-axes[1].plot(monthly_sales.index.astype(str), monthly_cost.values, label='Себестоимость')
-axes[1].set_title('Динамика себестоимости по месяцам')
-axes[1].set_ylabel('Рублей')
-plt.tight_layout()
+plt.plot(monthly_sales.index.astype(str), monthly_sales.values, label='Продажи')
+plt.title('Динамика продаж по месяцам')
+plt.ylabel('Рублей')
+plt.show()
+
+plt.figure(figsize=(10, 6))
+plt.plot(monthly_cost.index.astype(str), monthly_cost.values, label='Себестоимость')
+plt.title('Динамика себестоимости по месяцам')
+plt.ylabel('Рублей')
 plt.show()
 
 
-fig, axes = plt.subplots(1, 2, figsize=(16, 8))
-axes[0].plot(monthly_sales.index.astype(str), monthly_profit.values, label='Прибыль')
-axes[0].set_title('Динамика прибыли по месяцам')
-axes[0].set_ylabel('Рублей')
+plt.figure(figsize=(10, 6))
+plt.plot(monthly_profit.index.astype(str), monthly_profit.values, label='Прибыль')
+plt.title('Динамика прибыли по месяцам')
+plt.ylabel('Рублей')
+plt.show()
 
-axes[1].plot(monthly_qty.index.astype(str), monthly_qty.values, color='green')
-axes[1].set_ylabel('Количество')
-axes[1].tick_params(axis='x', rotation=45)
-plt.tight_layout()
+plt.figure(figsize=(10, 6))
+plt.plot(monthly_qty.index.astype(str), monthly_qty.values, color='green', label='Количество')
+plt.title('Динамика объемов продаж')
+plt.ylabel('Количество')
+plt.tick_params(axis='x', rotation=45)
 plt.show()
 
 # АНАЛИЗ ПО БРЕНДАМ
@@ -115,17 +144,17 @@ fig, axes = plt.subplots(1, 3, figsize=(15, 5))
 
 # Продажи по брендам
 brand_sales = df.groupby('бренд')['Продажи'].sum().sort_values(ascending=False)
-brand_sales.plot(kind='bar', ax=axes[0,0], title='Объем продаж по брендам')
+brand_sales.plot(kind='bar', ax=axes[0], title='Объем продаж по брендам')
 axes[0,0].tick_params(axis='x', rotation=45)
 
 # Прибыль по брендам
 brand_profit = df.groupby('бренд')['Прибыль'].sum().sort_values(ascending=False)
-brand_profit.plot(kind='bar', ax=axes[0,1], title='Прибыль по брендам', color='orange')
+brand_profit.plot(kind='bar', ax=axes[1], title='Прибыль по брендам', color='orange')
 axes[0,1].tick_params(axis='x', rotation=45)
 
 # Количество продаж по брендам
 brand_qty = df.groupby('бренд')['Количество'].sum().sort_values(ascending=False)
-brand_qty.plot(kind='bar', ax=axes[0,2], title='Количество продаж по брендам', color='red')
+brand_qty.plot(kind='bar', ax=axes[2], title='Количество продаж по брендам', color='red')
 axes[1,1].tick_params(axis='x', rotation=45)
 
 plt.tight_layout()
