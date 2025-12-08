@@ -1,3 +1,5 @@
+import pytest
+
 from task2 import find_unique
 
 class TestFindUnique:

@@ -1,3 +1,5 @@
+import pytest
+
 from task5 import merge_dicts
 
 
