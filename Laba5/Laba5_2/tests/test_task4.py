@@ -18,9 +18,9 @@ from task4 import are_anagrams
     ("ABC", "cba", True),
     ("Hello", "Olleh", True),
     
-    ("979", "997", True)
-    ("12345", "54321", True)
-    ("979", "9976", False)
+    ("799", "997", True),
+    ("12345", "54321", True),
+    ("979", "9976", False),
 
     ("", "", True),
     ("a", "a", True),
