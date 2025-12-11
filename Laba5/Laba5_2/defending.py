@@ -5,18 +5,13 @@ def sum_kratniy_3(number):
     if not isinstance(number, int):
         raise ValueError("Недопустимое значение для функции")
 
+    if number < 0:
+        raise ValueError("Число не может быть отрицательным")
+    
     total = 0
-    if number >= 0:
-        for i in range(number + 1):
-            if i % 3 == 0:
-                total += i
-    else:
-        number = abs(number)
-        for i in range(number + 1):
-            if i % 3 == 0:
-                total -= i
+    for i in range(number + 1):
+        if i % 3 == 0:
+            total += i
     
     return total
     
-
-print(sum_kratniy_3(-12))
