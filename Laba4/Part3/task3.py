@@ -48,9 +48,10 @@ class AdmissionDataGenerator:
 
     def calculate_total_score(self, ct_scores, certificate_grade):
         ct_total = sum(ct_scores.values())
+        certificate_grade = certificate_grade * 10 
         return ct_total + certificate_grade
 
-    def generate_student_data(self, n_students=1000):
+    def generate_student_data(self, n_students=1001):
         students = []
         years = [2020, 2021, 2022, 2023, 2024, 2025]
         
@@ -60,7 +61,7 @@ class AdmissionDataGenerator:
             
                 # Генерация данных
                 full_name = self.fake.name()
-                study_form = np.random.choice(['бесплатная', 'платная'], p=[0.3, 0.7])
+                study_form = np.random.choice(['бесплатная', 'платная'])
                 ct_scores = self.generate_ct_scores(specialty)
                 certificate_grade = self.generate_certificate_grade()
                 total_score = self.calculate_total_score(ct_scores, certificate_grade)
@@ -123,13 +124,12 @@ def data_visualizations(students_df):
     years = certificate_avg.index
     scores = certificate_avg.values
     
-    bars = ax2.bar(years, scores, color="purple")
+    ax2.bar(years, scores, color="purple")
     ax2.set_title('Динамика среднего балла аттестата', fontweight='bold')
     ax2.set_xlabel('Год')
     ax2.set_ylabel('Средний балл аттестата')
-    ax2.yaxis.set_major_locator(MultipleLocator(0.5))
-    
-    
+  
+      
     # Динамика проходного балла по специальностям (линейная диаграмма)
     ax3 = axes1[1][1]
     passing_scores = students_df.groupby(['Год поступления', 'Специальность'])['Общий балл'].min().unstack()
@@ -147,11 +147,11 @@ def data_visualizations(students_df):
     fig2, axes2 = plt.subplots(1, 2, figsize=(10, 10))
     fig2.suptitle('Статистика вступительной кампании 2020-2025', fontsize=16, fontweight='bold')
     
-    # Количество поступивших студентов по специальностям (горизонтальная столбчатая)
+    # Количество поступивших студентов по специальностям
     ax4 = axes2[0]
     specialty_counts = students_df['Специальность'].value_counts()
     
-    bars = ax4.bar(list(specialty_counts.index), specialty_counts.values, color="purple")
+    ax4.bar(list(specialty_counts.index), specialty_counts.values, color="purple")
     ax4.set_title('Количество поступивших по специальностям', fontweight='bold')
     ax4.set_ylabel('Количество студентов')
     
