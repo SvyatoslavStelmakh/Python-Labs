@@ -1,6 +1,8 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
 
 df = pd.read_excel('s7_data_sample_rev4_50k.xlsx', sheet_name='DATA')   # загружаем таблицу из файла
 df.columns = ['дата покупки', 'дата совершения перелета', 'тип пассажиров', 'сумма', 'способ оплаты', 'город отправления', 'город назначения', 'тип перелета', 'наличие программы лояльности', 'способ покупки']
@@ -139,4 +141,29 @@ plt.ylabel('Количество транзакций')
 plt.legend(title='Способ продажи', loc='upper left')
 plt.xticks(rotation=90)
 plt.tight_layout()
+plt.show()
+
+# Подготовка данных для прогнозирования
+daily_sales = df.groupby('дата покупки').size().reset_index(name='количество')
+daily_sales = daily_sales.sort_values('дата покупки')
+
+daily_sales['день'] = daily_sales['дата покупки'].dt.dayofyear
+daily_sales['месяц'] = daily_sales['дата покупки'].dt.month
+daily_sales['год'] = daily_sales['дата покупки'].dt.year
+
+X = daily_sales[['день', 'месяц', 'год']]
+y = daily_sales['количество']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+y_pred = model.predict(X_test)
+
+plt.figure(figsize=(12, 6))
+plt.plot(daily_sales['дата покупки'], daily_sales['количество'], label='Фактические значения')
+plt.title('Прогнозирование объемов продаж')
+plt.xlabel('Дата')
+plt.ylabel('Количество продаж')
+plt.legend()
 plt.show()
