@@ -32,10 +32,10 @@ print(f"Общее количество пассажиров: {total_passengers:
 monthly_stats = df.groupby(df['дата покупки'].dt.to_period('M')).agg({
     'тип пассажиров': 'count',
     'сумма': ['sum', 'mean']
-}).round(0)
+}).round(1)
 
 monthly_stats.columns = ['Количество пассажиров', 'Суммарная выручка', 'Средняя выручка']
-print(monthly_stats)
+print(f"Статистика по месяцам\n{monthly_stats}")
 
 # Топ-5 аэропортов отправления
 top_orig = df['город отправления'].value_counts().head(5)
@@ -56,7 +56,7 @@ plt.ylabel('Количество перелетов')
 plt.show()
 
 # Самые популярные маршруты
-route_counts = df.groupby(['город отправления', 'город назначения']).size().reset_index(name='counts').sort_values(by='counts', ascending=False).head(5)
+route_counts = df.groupby(['город отправления', 'город назначения']).size().reset_index(name='counts').sort_values(by='counts', ascending=True).head(5)
 print("Топ-5 популярных маршрутов:")
 print(route_counts)
 
@@ -86,7 +86,7 @@ plt.show()
 
 print("Наибольшее количество продаж билетов приходится на ИЮЛЬ")
 print("Также можно выделить ноябрь")
-print("Наибольшая прибыль наблюдается в ИЮЛЕ по АВГУСТЕ")
+print("Наибольшая прибыль наблюдается в ИЮЛЕ и АВГУСТЕ")
 print("Наибольшее количество перелетов в АВГУСТЕ")
 
 # Распределение по типам пассажиров
