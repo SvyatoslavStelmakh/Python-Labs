@@ -1,7 +1,5 @@
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle, Ellipse
-import numpy as np
-
 
 fig, ax = plt.subplots()    # создаем фигуру и оси(область рисования)
 
