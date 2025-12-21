@@ -92,91 +92,135 @@ product_analysis = df.groupby('товар').agg({
     'Средняя цена': 'mean'
 }).round(2)
 
-product_analysis.columns = ['Общие продажи', 'Средние продажи', 'Общее количество', 'Среднее количество', 'Общая прибыль', 'Средняя прибыль', 'Средняя цена']
+product_analysis.columns = ['Общие продажи', 'Средние продажи',
+                            'Общее количество', 'Среднее количество',
+                            'Общая прибыль', 'Средняя прибыль',
+                            'Средняя цена']
 print(product_analysis.sort_values('Общие продажи', ascending=False))
 
 # ОБЩАЯ ДИНАМИКА ПРОДАЖ
 
-monthly_sales = df.groupby(df['Дата'].dt.to_period('M'))['Продажи'].sum()
-monthly_profit = df.groupby(df['Дата'].dt.to_period('M'))['Прибыль'].sum()
-monthly_cost = df.groupby(df['Дата'].dt.to_period('M'))['Себестоимость'].sum()
+# Годовая динамика
+yearly_sales = df.groupby('Год').agg({
+    'Продажи': 'sum',
+    'Количество': 'sum',
+    'Себестоимость': 'sum',
+    'Прибыль': 'sum'
+}).reset_index()
+
+# Годовая динамика ключевых показателей
+years = yearly_sales['Год']
+x = np.arange(len(years))
+width = 0.2
+
+plt.figure(figsize=(10, 6))
+plt.bar(x - width, yearly_sales['Продажи']/1e6, width, label='Продажи (млн)')
+plt.bar(x, yearly_sales['Прибыль']/1e6, width, label='Прибыль (млн)')
+plt.bar(x + width, yearly_sales['Количество']/1000, width, label='Количество (тыс)')
+plt.title('Годовая динамика ключевых показателей')
+plt.xlabel('Год')
+plt.xticks(x, years)
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.show()
+
+monthly_sales = df.groupby(df['Дата'].dt.to_period('M'))['Продажи'].sum()/1e6
+monthly_profit = df.groupby(df['Дата'].dt.to_period('M'))['Прибыль'].sum()/1e6
+monthly_cost = df.groupby(df['Дата'].dt.to_period('M'))['Себестоимость'].sum()/1e6
 monthly_qty = df.groupby(df['Дата'].dt.to_period('M'))['Количество'].sum()
+monthly_price = df.groupby(df['Дата'].dt.to_period('M'))['Средняя цена'].mean()
 
-print(monthly_sales)
-
-plt.figure(figsize=(14, 6))
-monthly_sales.plot(kind='line')
+plt.figure(figsize=(10, 6))
+monthly_sales.plot(kind='line', label='Продажи')
 plt.title('Динамика продаж по месяцам')
-plt.ylabel('Рублей')
+plt.ylabel('Рублей (млн)')
+plt.legend()
 plt.show()
 
 plt.figure(figsize=(10, 6))
-plt.plot(monthly_cost.index, monthly_cost.values, label='Себестоимость')
-plt.title('Динамика себестоимости по месяцам')
-plt.ylabel('Рублей')
-plt.show()
-
-plt.figure(figsize=(10, 6))
-plt.plot(monthly_profit.index, monthly_profit.values, label='Прибыль')
+monthly_profit.plot(kind='line',  color='green', label='Прибыль')
 plt.title('Динамика прибыли по месяцам')
-plt.ylabel('Рублей')
+plt.legend()
+plt.ylabel('Рублей (млн)')
 plt.show()
 
 plt.figure(figsize=(10, 6))
-plt.plot(monthly_qty.index, monthly_qty.values, color='green', label='Количество')
+monthly_cost.plot(kind='line', color='orange', label='Себестоимость')
+plt.title('Динамика себестоимости по месяцам')
+plt.legend()
+plt.ylabel('Рублей (млн)')
+plt.show()
+
+plt.figure(figsize=(10, 6))
+monthly_qty.plot(kind='line', color='red', label='Количество')
 plt.title('Динамика объемов продаж')
+plt.legend()
 plt.ylabel('Количество')
-plt.tick_params(axis='x', rotation=45)
+plt.show()
+
+plt.figure(figsize=(10, 6))
+monthly_qty.plot(kind='line', color='purple', label='Средняя цена')
+plt.title('Динамика средней цены')
+plt.legend()
+plt.ylabel('Рублей')
 plt.show()
 
 # АНАЛИЗ ПО БРЕНДАМ
+
+# Распределение продаж по брендам
+brand_sales = df.groupby('бренд')['Продажи'].sum().sort_values(ascending=False)/1e6
+plt.figure(figsize=(6, 6))
+plt.pie(brand_sales.values, labels=brand_sales.index, autopct='%1.1f%%')
+plt.title('Распределение продаж по брендам')
+plt.show()
+
 fig, axes = plt.subplots(1, 3, figsize=(15, 5))
 
 # Продажи по брендам
-brand_sales = df.groupby('бренд')['Продажи'].sum().sort_values(ascending=False)
 brand_sales.plot(kind='bar', ax=axes[0], title='Объем продаж по брендам')
-axes[0,0].tick_params(axis='x', rotation=45)
+axes[0].set_ylabel('Рублей (млн)')
+axes[0].tick_params(axis='x', rotation=45)
 
 # Прибыль по брендам
-brand_profit = df.groupby('бренд')['Прибыль'].sum().sort_values(ascending=False)
+brand_profit = df.groupby('бренд')['Прибыль'].sum().sort_values(ascending=True)/1e6
 brand_profit.plot(kind='bar', ax=axes[1], title='Прибыль по брендам', color='orange')
-axes[0,1].tick_params(axis='x', rotation=45)
+axes[1].set_ylabel('Рублей (млн)')
+axes[1].tick_params(axis='x', rotation=45)
 
 # Количество продаж по брендам
-brand_qty = df.groupby('бренд')['Количество'].sum().sort_values(ascending=False)
+brand_qty = df.groupby('бренд')['Количество'].sum().sort_values(ascending=True)
 brand_qty.plot(kind='bar', ax=axes[2], title='Количество продаж по брендам', color='red')
-axes[1,1].tick_params(axis='x', rotation=45)
+axes[2].set_ylabel('Штук')
+axes[2].tick_params(axis='x', rotation=45)
 
 plt.tight_layout()
 plt.show()
 
 # 3. АНАЛИЗ ПО ТОВАРАМ (ТОП-10)
 fig, axes = plt.subplots(2, 2, figsize=(15, 12))
+indexes = range(1, 11)
 
 # Топ-10 товаров по продажам
 top_products_sales = df.groupby('товар')['Продажи'].sum().nlargest(10)
 top_products_sales.plot(kind='bar', ax=axes[0,0], title='Топ-10 товаров по объему продаж')
-axes[0,0].tick_params(axis='x', rotation=45)
+axes[0,0].tick_params(axis='x', rotation=30)
 
 # Топ-10 товаров по прибыли
 top_products_profit = df.groupby('товар')['Прибыль'].sum().nlargest(10)
 top_products_profit.plot(kind='bar', ax=axes[0,1], title='Топ-10 товаров по прибыли', color='orange')
-axes[0,1].tick_params(axis='x', rotation=45)
+axes[0,1].tick_params(axis='x', rotation=30)
 
 # Топ-10 товаров по количеству продаж
 top_products_qty = df.groupby('товар')['Количество'].sum().nlargest(10)
-top_products_qty.plot(kind='bar', ax=axes[1,1], title='Топ-10 товаров по количеству продаж', color='red')
-axes[1,1].tick_params(axis='x', rotation=45)
+top_products_qty.plot(kind='bar', ax=axes[1,0], title='Топ-10 товаров по количеству продаж', color='green')
+axes[1,0].tick_params(axis='x', rotation=30)
+
+# Топ-10 товаров по средней цене
+top_products_price = df.groupby('товар')['Средняя цена'].mean().nlargest(10)
+top_products_price.plot(kind='bar', ax=axes[1,1], title='Топ-10 товаров по средней цене', color='red')
+axes[1,1].tick_params(axis='x', rotation=30)
 
 plt.tight_layout()
-plt.show()
-
-# Сезонность по месяцам
-plt.figure(figsize=(10, 6))
-monthly_pattern = df.groupby('Месяц')[['Продажи', 'Количество']].mean()
-monthly_pattern['Продажи'].plot(marker='o')
-plt.title('Средние продажи по месяцам')
-plt.ylabel('Средние продажи, руб')
 plt.show()
 
 # ПРОГНОЗИРОВАНИЕ ДЛЯ КАЖДОГО ТОВАРА
