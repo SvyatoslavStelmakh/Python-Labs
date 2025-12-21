@@ -12,7 +12,7 @@ sys.setrecursionlimit(10000)
 df = pd.read_excel('lab_4_part_5.xlsx', 
                    sheet_name='Данные',
                    usecols='B:J',  # колонки B-J
-                   skiprows=2,     # пропускаем 2 строки (строки 1 и 2)
+                   skiprows=1,     # пропускаем 2 строки (строки 1 и 2)
                    engine='openpyxl')
 
 # Назначаем имена колонкам (так как пропустили заголовки)
@@ -22,62 +22,53 @@ df.columns = ['Дата', 'Год', 'Год-мес', 'точка', 'бренд',
 # Удаляем полностью пустые строки
 df = df.dropna(how='all')
 
-# Проверяем и конвертируем типы данных
-print("\nТипы данных перед конвертацией:")
-print(df.dtypes)
-
-# Преобразование даты
-df['Дата'] = pd.to_datetime(df['Дата'])
-
-# Преобразование числовых колонок
-numeric_cols = ['Год', 'Год-мес', 'Количество', 'Продажи', 'Себестоимость']
-for col in numeric_cols:
-    if col in df.columns:
-        # Сначала конвертируем в строку, затем в число (для обработки формул)
-        df[col] = pd.to_numeric(df[col], errors='coerce')
-
-# Просмотр структуры данных
-print("Информация о данных:")
-print(df.info())
-print("\nПервые 5 строк:")
-print(df.head())
-print("\nСтатистика по данным:")
-print(df.describe())
-
 # Преобразование даты
 df['Дата'] = pd.to_datetime(df['Дата'])
 df['Месяц'] = df['Дата'].dt.month
 df['Квартал'] = df['Дата'].dt.quarter
 
+df['Продажи'] = df['Продажи']*0.036
+df['Себестоимость'] = df['Себестоимость']*0.036
+print("\nПервые 5 строк:")
+print(df.head(5))
+
 # Расчет дополнительных показателей
 df['Прибыль'] = df['Продажи'] - df['Себестоимость']
 df['Средняя цена'] = (df['Продажи'] / df['Количество']).round(2)
+
+print("\nПервые 5 строк:")
+print(df.head(5))
 
 print("=== ОБЩАЯ ДИНАМИКА ТОВАРООБОРОТА ===")
 
 # Месячная динамика
 print("Месячная динамика:")
-monthly_sales = df.groupby(['Год', 'Месяц']).agg({
+monthly_sales = df.groupby(df['Дата'].dt.to_period('M')).agg({
     'Продажи': 'sum',
     'Количество': 'sum',
     'Себестоимость': 'sum',
     'Прибыль': 'sum'
 }).reset_index()
 
-monthly_sales['Период'] = monthly_sales['Год'].astype(str) + '-' + monthly_sales['Месяц'].astype(str).str.zfill(2)
 print(monthly_sales)
 
 # Анализ по точкам реализации
 print("\n=== АНАЛИЗ ПО ТОЧКАМ РЕАЛИЗАЦИИ ===")
 
-point_analysis = df.groupby('точка').agg({
-    'Продажи': ['sum', 'mean', 'std'],
-    'Количество': ['sum', 'mean', 'std'],
-    'Прибыль': ['sum', 'mean']
-}).round(2)
+# Информация об объемах продажах по точкам
+point_analysis_sales = df.groupby('точка').agg({'Продажи': ['sum', 'mean', 'std']}).round(2)
+point_analysis_sales.columns = ['Общие продажи', 'Средние продажи', 'Стандартное отклонение продаж']
+print(point_analysis_sales)
 
-point_analysis.columns = ['_'.join(col).strip() for col in point_analysis.columns.values]
-print(point_analysis)
+# Информация о количестве проданных товаров по точкам
+point_analysis_amount = df.groupby('точка').agg({'Количество': ['sum', 'mean', 'std']}).round(0)
+point_analysis_amount.columns = ['Общее количество проданных товаров', 'Средние количество проданных товаров', 'Стандартное отклонение количества проданных товаров']
+print(point_analysis_amount)
+
+# Информация о прибыли по точкам
+point_analysis_profit = df.groupby('точка').agg({'Прибыль': ['sum', 'mean']}).round(2)
+point_analysis_profit.columns = ['Общая прибыль', 'Средняя прибыль']
+print(point_analysis_profit)
 
 # Анализ по брендам
 print("\n=== АНАЛИЗ ПО БРЕНДАМ ===")
@@ -85,11 +76,10 @@ print("\n=== АНАЛИЗ ПО БРЕНДАМ ===")
 brand_analysis = df.groupby('бренд').agg({
     'Продажи': ['sum', 'mean'],
     'Количество': ['sum', 'mean'],
-    'Прибыль': ['sum', 'mean'],
-    'Средняя цена': 'mean'
+    'Прибыль': ['sum', 'mean']
 }).round(2)
 
-brand_analysis.columns = ['_'.join(col).strip() for col in brand_analysis.columns.values]
+brand_analysis.columns = ['Общие продажи', 'Средние продажи', 'Общее количество', 'Среднее количество', 'Общая прибыль', 'Средняя прибыль']
 print(brand_analysis)
 
 # Анализ по товарам
@@ -102,38 +92,38 @@ product_analysis = df.groupby('товар').agg({
     'Средняя цена': 'mean'
 }).round(2)
 
-product_analysis.columns = ['_'.join(col).strip() for col in product_analysis.columns.values]
-print(product_analysis.sort_values('Продажи_sum', ascending=False).head(10))
+product_analysis.columns = ['Общие продажи', 'Средние продажи', 'Общее количество', 'Среднее количество', 'Общая прибыль', 'Средняя прибыль', 'Средняя цена']
+print(product_analysis.sort_values('Общие продажи', ascending=False))
 
 # ОБЩАЯ ДИНАМИКА ПРОДАЖ
 
-monthly_sales = df.groupby('Год-мес')['Продажи'].sum()
-monthly_profit = df.groupby('Год-мес')['Прибыль'].sum()
-monthly_cost = df.groupby('Год-мес')['Себестоимость'].sum()
-monthly_qty = df.groupby('Год-мес')['Количество'].sum()
+monthly_sales = df.groupby(df['Дата'].dt.to_period('M'))['Продажи'].sum()
+monthly_profit = df.groupby(df['Дата'].dt.to_period('M'))['Прибыль'].sum()
+monthly_cost = df.groupby(df['Дата'].dt.to_period('M'))['Себестоимость'].sum()
+monthly_qty = df.groupby(df['Дата'].dt.to_period('M'))['Количество'].sum()
 
-plt.figure(figsize=(10, 6))
+print(monthly_sales)
 
-plt.plot(monthly_sales.index.astype(str), monthly_sales.values, label='Продажи')
+plt.figure(figsize=(14, 6))
+monthly_sales.plot(kind='line')
 plt.title('Динамика продаж по месяцам')
 plt.ylabel('Рублей')
 plt.show()
 
 plt.figure(figsize=(10, 6))
-plt.plot(monthly_cost.index.astype(str), monthly_cost.values, label='Себестоимость')
+plt.plot(monthly_cost.index, monthly_cost.values, label='Себестоимость')
 plt.title('Динамика себестоимости по месяцам')
 plt.ylabel('Рублей')
 plt.show()
 
-
 plt.figure(figsize=(10, 6))
-plt.plot(monthly_profit.index.astype(str), monthly_profit.values, label='Прибыль')
+plt.plot(monthly_profit.index, monthly_profit.values, label='Прибыль')
 plt.title('Динамика прибыли по месяцам')
 plt.ylabel('Рублей')
 plt.show()
 
 plt.figure(figsize=(10, 6))
-plt.plot(monthly_qty.index.astype(str), monthly_qty.values, color='green', label='Количество')
+plt.plot(monthly_qty.index, monthly_qty.values, color='green', label='Количество')
 plt.title('Динамика объемов продаж')
 plt.ylabel('Количество')
 plt.tick_params(axis='x', rotation=45)
@@ -181,20 +171,12 @@ axes[1,1].tick_params(axis='x', rotation=45)
 plt.tight_layout()
 plt.show()
 
-# СЕЗОННОСТЬ ПРОДАЖ
-fig, axes = plt.subplots(1, 2, figsize=(15, 6))
-
 # Сезонность по месяцам
+plt.figure(figsize=(10, 6))
 monthly_pattern = df.groupby('Месяц')[['Продажи', 'Количество']].mean()
-monthly_pattern['Продажи'].plot(ax=axes[0], marker='o', title='Средние продажи по месяцам')
-axes[0].set_ylabel('Средние продажи, руб')
-
-# Сезонность по кварталам
-quarterly_pattern = df.groupby('Квартал')[['Продажи', 'Количество']].mean()
-quarterly_pattern['Продажи'].plot(ax=axes[1], marker='s', title='Средние продажи по кварталам', color='orange')
-axes[1].set_ylabel('Средние продажи, руб')
-
-plt.tight_layout()
+monthly_pattern['Продажи'].plot(marker='o')
+plt.title('Средние продажи по месяцам')
+plt.ylabel('Средние продажи, руб')
 plt.show()
 
 # ПРОГНОЗИРОВАНИЕ ДЛЯ КАЖДОГО ТОВАРА
