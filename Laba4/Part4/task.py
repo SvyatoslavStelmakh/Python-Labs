@@ -70,13 +70,30 @@ total_passengers = len(df)
 
 print(f"Общее количество пассажиров: {total_passengers:,}")
 
+revenue_stats = df['сумма'].describe().round(2)
+print(f"Общая статистика по выручке\n{revenue_stats}")
+
 monthly_stats = df.groupby(df['дата покупки'].dt.to_period('M')).agg({
     'тип пассажиров': 'count',
     'сумма': ['sum', 'mean']
-}).round(1)
+}).round(1).reset_index()
 
-monthly_stats.columns = ['Количество пассажиров', 'Суммарная выручка', 'Средняя выручка']
+monthly_stats.columns = ['Месяц', 'Количество пассажиров', 'Суммарная выручка', 'Средняя выручка']
 print(f"Статистика по месяцам\n{monthly_stats}")
+
+fig, ax = plt.subplots(figsize=(10, 5))
+ax.axis('tight')
+ax.axis('off')
+table = ax.table(cellText=monthly_stats.values,
+                 colLabels=monthly_stats.columns,
+                 cellLoc='center',
+                 loc='center')
+table.auto_set_font_size(False)
+table.set_fontsize(10)
+table.scale(1.2, 1.5)  # Масштабирование таблицы
+plt.title('Статистика по месяцам', fontsize=16, fontweight='bold', pad=20)
+plt.tight_layout()
+plt.show()
 
 # Топ-5 аэропортов отправления
 top_orig = df['город отправления'].value_counts().head(5)
@@ -97,15 +114,30 @@ plt.ylabel('Количество перелетов', fontsize=12)
 plt.show()
 
 # Самые популярные маршруты
-route_counts = df.groupby(['город отправления', 'город назначения']).size().reset_index(name='counts').sort_values(by='counts', ascending=True).head(5)
+route_counts = df.groupby(['город отправления', 'город назначения']).size().reset_index(name='Количество перелетов').sort_values(by='Количество перелетов', ascending=False).head(5)
 print("Топ-5 популярных маршрутов:")
 print(route_counts)
+
+fig, ax = plt.subplots(figsize=(10, 2))
+ax.axis('tight')
+ax.axis('off')
+table = ax.table(cellText=route_counts.values,
+                 colLabels=route_counts.columns,
+                 cellLoc='center',
+                 loc='center')
+table.auto_set_font_size(False)
+table.set_fontsize(10)
+table.scale(1.2, 1.5)  # Масштабирование таблицы
+plt.title('Топ-5 популярных маршрутов', fontsize=16, fontweight='bold', pad=20)
+plt.tight_layout()
+plt.show()
+
 
 monthly_sales = df.groupby(df['дата покупки'].dt.to_period('M')).size()   # количество продаж в месяц 
 monthly_revenue = df.groupby(df['дата покупки'].dt.to_period('M'))['сумма'].sum()    # сумма продаж в месяц
 monthly_flights = df.groupby(df['дата совершения перелета'].dt.to_period('M')).size()   # количество перелетов в месяц 
 
-plt.figure(figsize=(12, 5))
+plt.figure(figsize=(12, 4))
 plt.subplot(1, 2, 1)
 monthly_sales.plot(kind='line', title='Количество продаж по месяцам')
 plt.xlabel('Месяц', fontsize=12)
@@ -118,7 +150,7 @@ plt.ylabel('Сумма дохода', fontsize=12)
 plt.tight_layout()
 plt.show()
 
-plt.figure(figsize=(8, 5))
+plt.figure(figsize=(6, 4))
 monthly_flights.plot(kind='line', title='Количество перелетов по месяцам')
 plt.xlabel('Месяц', fontsize=12)
 plt.ylabel('Количество перелетов', fontsize=12)
@@ -138,12 +170,13 @@ plt.title('Распределение по типам пассажиров', fon
 plt.show()
 
 # Средний доход по типам пассажиров
-pax_revenue = df.groupby('тип пассажиров')['сумма'].mean().sort_values(ascending=False)
+pax_revenue = df.groupby('тип пассажиров')['сумма'].sum().sort_values(ascending=False)
 plt.figure(figsize=(10, 5))
 sns.barplot(x=pax_revenue.index, y=pax_revenue.values)
-plt.title("Средний доход по типам пассажиров", fontsize=14, fontweight='bold')
+plt.title("Выручка по типам пассажиров", fontsize=14, fontweight='bold')
 plt.xlabel('Типы пассажиров', fontsize=12)
-plt.ylabel('Средний доход', fontsize=12)
+plt.ylabel('Выручка', fontsize=12)
+plt.show()
 
 # Анализ программы лояльности
 ffp_counts = df['наличие программы лояльности'].value_counts()
@@ -155,7 +188,7 @@ plt.show()
 
 # Распределение по способам оплаты
 fop_counts = df['способ оплаты'].value_counts().head(10)
-plt.figure(figsize=(10, 6))
+plt.figure(figsize=(10, 4))
 sns.barplot(x=fop_counts.values, y=fop_counts.index)
 plt.title('Самые популярные способы оплаты', fontsize=14, fontweight='bold')
 plt.xlabel('Количество покупок', fontsize=12)
@@ -163,7 +196,7 @@ plt.show()
 
 # Средняя сумма платежа по способам оплаты
 fop_revenue = df.groupby('способ оплаты')['сумма'].mean().sort_values(ascending=False)
-plt.figure(figsize=(10, 6))
+plt.figure(figsize=(10, 4))
 sns.barplot(y=fop_revenue.index, x=fop_revenue.values)
 plt.title('Средняя цена билета по способу оплаты', fontsize=14, fontweight='bold')
 plt.xlabel('Цена', fontsize=12)
@@ -181,7 +214,7 @@ fop_sale_melted = fop_sale_cross.reset_index().melt(id_vars=['способ оп�
 print("Связь способа оплаты и типа продажи:")
 print(fop_sale_cross)
 
-plt.figure(figsize=(10, 6))
+plt.figure(figsize=(10, 4))
 sns.barplot(data=fop_sale_melted, x='способ оплаты', y='COUNT', hue='способ покупки',
                  palette=['#1f77b4', '#ff7f0e'])
 plt.title('Распределение способов продажи по способам оплаты', fontsize=14, fontweight='bold')
