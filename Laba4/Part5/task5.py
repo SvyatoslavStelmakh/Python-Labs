@@ -223,59 +223,49 @@ axes[1,1].tick_params(axis='x', rotation=30)
 plt.tight_layout()
 plt.show()
 
-# ПРОГНОЗИРОВАНИЕ ДЛЯ КАЖДОГО ТОВАРА
-def forecast_product_sales(product_data, product_name, periods=6):
-    if len(product_data) < 6:
-        return None, None, None
+# Создадим временные ряды для прогнозирования
+def create_time_series(data, product_name=None):
+    if product_name:
+        data = data[data['товар'] == product_name]
     
-    # Подготовка данных для модели
-    X = np.array(range(len(product_data))).reshape(-1, 1)
-    y = product_data['Продажи'].values
+    time_series = data.groupby(['Год', 'Месяц']).agg({'Продажи': 'sum'}).reset_index()
+    time_series['period'] = time_series['Год'] * 100 + time_series['Месяц']
+    time_series = time_series.sort_values('period')
+    time_series['time_index'] = range(len(time_series))
     
-    # Обучение линейной регрессии
-    model = LinearRegression()
-    model.fit(X, y)
-    
-    # Прогноз на future_periods месяцев
-    future_X = np.array(range(len(product_data), len(product_data) + periods)).reshape(-1, 1)
-    forecast = model.predict(future_X)
-    
-    # Расчет метрик качества
-    y_pred = model.predict(X)
-    mae = mean_absolute_error(y, y_pred)
-    rmse = np.sqrt(mean_squared_error(y, y_pred))
-    
-    return forecast, mae, rmse
+    return time_series
 
-# Прогноз для топ-5 товаров
-top_products = df.groupby('товар')['Продажи'].sum().nlargest(5).index
+# Прогноз для топ-3 товаров
+top_3_products = df.groupby('товар')['Продажи'].sum().nlargest(3).index
 
-fig, axes = plt.subplots(3, 2, figsize=(15, 12))
-axes = axes.flatten()
+# Прогноз на будущие периоды
+total_sales_ts = create_time_series(df)
+future_periods = 12
+last_time_index = total_sales_ts['time_index'].max()
+future_indices = np.array(range(last_time_index + 1, last_time_index + future_periods + 1)).reshape(-1, 1)
 
-for i, product in enumerate(top_products[:6]):
-    product_data = df[df['товар'] == product].sort_values('Дата')
+fig, axes = plt.subplots(1, 3, figsize=(12, 6))
+for i, product in enumerate(top_3_products):
+    product_ts = create_time_series(df, product)
     
-    # Прогноз
-    forecast, mae, rmse = forecast_product_sales(product_data, product)
-    
-    if forecast is not None:
-        # Визуализация исторических данных и прогноза
-        dates = product_data['Дата'].dt.strftime('%Y-%m')
-        future_dates = pd.date_range(start=product_data['Дата'].iloc[-1] + pd.DateOffset(months=1), 
-                                   periods=6, freq='M').strftime('%Y-%m')
+    if len(product_ts) > 4:  # минимальное количество точек для прогноза
+        X_product = product_ts[['time_index']]
+        y_product = product_ts['Продажи']
         
-        axes[i].plot(dates, product_data['Продажи'].values, marker='o', label='Исторические данные')
-        axes[i].plot(future_dates, forecast, marker='s', linestyle='--', label='Прогноз', color='red')
-        axes[i].set_title(f'{product}\nMAE: {mae:.0f}, RMSE: {rmse:.0f}')
-        axes[i].tick_params(axis='x', rotation=45)
+        # Линейная регрессия для прогноза тренда
+        product_model = LinearRegression()
+        product_model.fit(X_product, y_product)
+        
+        # Прогноз
+        future_product = product_model.predict(future_indices)
+        
+        axes[i].plot(product_ts['time_index'], y_product/1e3, 'b-', marker='o', label='История')
+        axes[i].plot(future_indices, future_product/1e3, 'r--', marker='s', label='Прогноз')
+        axes[i].set_title(f'Прогноз для: {product}')
+        axes[i].set_xlabel('Временной индекс')
+        axes[i].set_ylabel('Продажи (тыс)')
         axes[i].legend()
-        axes[i].grid(True, alpha=0.3)
-
-# Удаляем лишние subplots
-for i in range(len(top_products[:6]), 6):
-    fig.delaxes(axes[i])
+        axes[i].grid(True)
 
 plt.tight_layout()
 plt.show()
-
