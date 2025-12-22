@@ -1,11 +1,52 @@
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 
+# Настройка стиля графиков
+plt.style.use('default')
+sns.set_palette("husl")
+
 df = pd.read_excel('s7_data_sample_rev4_50k.xlsx', sheet_name='DATA')   # загружаем таблицу из файла
 df.columns = ['дата покупки', 'дата совершения перелета', 'тип пассажиров', 'сумма', 'способ оплаты', 'город отправления', 'город назначения', 'тип перелета', 'наличие программы лояльности', 'способ покупки']
+
+pax_type_names = {
+    'AD': 'Взрослый',
+    'CHD': 'Ребёнок',
+    'INF': 'Неизвестно',
+    'FIM': 'Семейный'
+}
+
+fop_names = {
+    'AH': 'Корп. счёт',
+    'AI': 'Корп. счёт',
+    'BN': 'Бонусы',
+    'CA': 'Наличные',
+    'CC': 'Кредитная карта',
+    'DP': 'Динамическое\nценообразование',
+    'EX': 'Прочее',
+    'FF': 'Оплата милями',
+    'FS': 'Частично милями',
+    'IN': 'Корп. счёт',
+    'LS': 'Скидка 10%',
+    'MC': 'Прочее',
+    'PS': 'Подарок',
+    'VO': 'Ваучер'
+}
+
+ffp_names = {
+    'FFP': 'Да',
+    np.nan: 'Нет'
+}
+
+#  перевод
+df['тип пассажиров'] = df['тип пассажиров'].map(pax_type_names).fillna('Неизвестно')
+df['способ оплаты'] = df['способ оплаты'].map(fop_names).fillna('Прочее')
+df['наличие программы лояльности'] = df['наличие программы лояльности'].map(ffp_names).fillna('Нет')
+
+print(df.head(10))
 
 print("ПЕРИОД ВРЕМЕНИ ДАТАСЕТА:")
 
@@ -41,18 +82,18 @@ print(f"Статистика по месяцам\n{monthly_stats}")
 top_orig = df['город отправления'].value_counts().head(5)
 plt.figure(figsize=(10, 6))
 sns.barplot(x=top_orig.index, y=top_orig.values)
-plt.title('Топ-5 аэропортов отправления')
-plt.xlabel('Аэропорты')
-plt.ylabel('Количество перелетов')
+plt.title('Топ-5 аэропортов отправления', fontsize=14, fontweight='bold')
+plt.xlabel('Аэропорты', fontsize=12)
+plt.ylabel('Количество перелетов', fontsize=12)
 plt.show()
 
 # Топ-5 аэропортов назначения
 top_dest = df['город назначения'].value_counts().head(5)
 plt.figure(figsize=(10, 6))
 sns.barplot(x=top_dest.index, y=top_dest.values)
-plt.title('Топ-5 аэропортов назначения')
-plt.xlabel('Аэропорты')
-plt.ylabel('Количество перелетов')
+plt.title('Топ-5 аэропортов назначения', fontsize=14, fontweight='bold')
+plt.xlabel('Аэропорты', fontsize=12)
+plt.ylabel('Количество перелетов', fontsize=12)
 plt.show()
 
 # Самые популярные маршруты
@@ -67,20 +108,20 @@ monthly_flights = df.groupby(df['дата совершения перелета'
 plt.figure(figsize=(12, 5))
 plt.subplot(1, 2, 1)
 monthly_sales.plot(kind='line', title='Количество продаж по месяцам')
-plt.xlabel('Месяц')
-plt.ylabel('Количество продаж')
+plt.xlabel('Месяц', fontsize=12)
+plt.ylabel('Количество продаж', fontsize=12)
 
 plt.subplot(1, 2, 2)
 monthly_revenue.plot(kind='line', title='Сумма продаж по месяцам')
-plt.xlabel('Месяц')
-plt.ylabel('Сумма дохода')
+plt.xlabel('Месяц', fontsize=12)
+plt.ylabel('Сумма дохода', fontsize=12)
 plt.tight_layout()
 plt.show()
 
 plt.figure(figsize=(8, 5))
 monthly_flights.plot(kind='line', title='Количество перелетов по месяцам')
-plt.xlabel('Месяц')
-plt.ylabel('Количество перелетов')
+plt.xlabel('Месяц', fontsize=12)
+plt.ylabel('Количество перелетов', fontsize=12)
 plt.tight_layout()
 plt.show()
 
@@ -93,36 +134,42 @@ print("Наибольшее количество перелетов в АВГУ�
 pax_type_counts = df['тип пассажиров'].value_counts()
 plt.figure(figsize=(5, 5))
 plt.pie(pax_type_counts.values, labels=pax_type_counts.index, autopct='%1.1f%%', startangle=90)
-plt.title('Распределение по типам пассажиров')
+plt.title('Распределение по типам пассажиров', fontsize=14, fontweight='bold')
 plt.show()
 
 # Средний доход по типам пассажиров
 pax_revenue = df.groupby('тип пассажиров')['сумма'].mean().sort_values(ascending=False)
 plt.figure(figsize=(10, 5))
 sns.barplot(x=pax_revenue.index, y=pax_revenue.values)
-plt.title("Средний доход по типам пассажиров")
-plt.xlabel('Типы пассажиров')
-plt.ylabel('Средний доход')
+plt.title("Средний доход по типам пассажиров", fontsize=14, fontweight='bold')
+plt.xlabel('Типы пассажиров', fontsize=12)
+plt.ylabel('Средний доход', fontsize=12)
 
 # Анализ программы лояльности
-ffp_data = df['наличие программы лояльности'].fillna('NO_FFP')  # замена пустых значений на 'NO_FFP'
-ffp_counts = ffp_data.value_counts()
-ffp_labels = ['Участники программы\nлояльности' if x == 'FFP' else 'Без программы\nлояльности' for x in ffp_counts.index]
+ffp_counts = df['наличие программы лояльности'].value_counts()
+ffp_labels = ['Участники программы\nлояльности' if x == 'Да' else 'Без программы\nлояльности' for x in ffp_counts.index]
 plt.figure(figsize=(8, 5))
 plt.pie(ffp_counts.values, labels=ffp_labels, autopct='%1.1f%%', startangle=90)
-plt.title('Участие в программе лояльности')
+plt.title('Участие в программе лояльности', fontsize=14, fontweight='bold')
 plt.show()
 
 # Распределение по способам оплаты
 fop_counts = df['способ оплаты'].value_counts().head(10)
 plt.figure(figsize=(10, 6))
 sns.barplot(x=fop_counts.values, y=fop_counts.index)
-plt.title('Самые популярные способы оплаты')
-plt.xlabel('Количество')
+plt.title('Самые популярные способы оплаты', fontsize=14, fontweight='bold')
+plt.xlabel('Количество покупок', fontsize=12)
 plt.show()
 
 # Средняя сумма платежа по способам оплаты
-fop_revenue = df.groupby('способ оплаты')['сумма'].mean().sort_values(ascending=False).head(10)
+fop_revenue = df.groupby('способ оплаты')['сумма'].mean().sort_values(ascending=False)
+plt.figure(figsize=(10, 6))
+sns.barplot(y=fop_revenue.index, x=fop_revenue.values)
+plt.title('Средняя цена билета по способу оплаты', fontsize=14, fontweight='bold')
+plt.xlabel('Цена', fontsize=12)
+plt.ylabel('Способ оплаты', fontsize=12)
+plt.tight_layout()
+plt.show()
 print("Средняя сумма платежа по способам оплаты:")
 print(fop_revenue)
 
@@ -131,39 +178,58 @@ fop_sale_cross = pd.crosstab(df['способ оплаты'], df['способ �
 fop_sale_melted = fop_sale_cross.reset_index().melt(id_vars=['способ оплаты'], 
                                                     var_name='способ покупки', 
                                                     value_name='COUNT')
+print("Связь способа оплаты и типа продажи:")
+print(fop_sale_cross)
 
-plt.figure(figsize=(14, 7))
-ax = sns.barplot(data=fop_sale_melted, x='способ оплаты', y='COUNT', hue='способ покупки',
+plt.figure(figsize=(10, 6))
+sns.barplot(data=fop_sale_melted, x='способ оплаты', y='COUNT', hue='способ покупки',
                  palette=['#1f77b4', '#ff7f0e'])
 plt.title('Распределение способов продажи по способам оплаты', fontsize=14, fontweight='bold')
-plt.xlabel('Способ оплаты')
-plt.ylabel('Количество транзакций')
+plt.xlabel('Способ оплаты', fontsize=12)
+plt.ylabel('Количество транзакций', fontsize=12)
 plt.legend(title='Способ продажи', loc='upper left')
-plt.xticks(rotation=90)
 plt.tight_layout()
 plt.show()
 
 # Подготовка данных для прогнозирования
-daily_sales = df.groupby('дата покупки').size().reset_index(name='количество')
+daily_sales = df.groupby(df['дата покупки'].dt.date).size().reset_index(name='количество')
+daily_sales['дата покупки'] = pd.to_datetime(daily_sales['дата покупки'])
 daily_sales = daily_sales.sort_values('дата покупки')
 
-daily_sales['день'] = daily_sales['дата покупки'].dt.dayofyear
+# Создание признаков для модели
+daily_sales['день_года'] = daily_sales['дата покупки'].dt.dayofyear
 daily_sales['месяц'] = daily_sales['дата покупки'].dt.month
 daily_sales['год'] = daily_sales['дата покупки'].dt.year
 
-X = daily_sales[['день', 'месяц', 'год']]
+# Разделение на обучающую и тестовую выборки
+X = daily_sales[['день_года', 'месяц', 'год']]
 y = daily_sales['количество']
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
+# Обучение модели
 model = LinearRegression()
 model.fit(X_train, y_train)
 
-y_pred = model.predict(X_test)
+# Предсказание на всей выборке
+y_pred_all = model.predict(X)
 
-plt.figure(figsize=(12, 6))
-plt.plot(daily_sales['дата покупки'], daily_sales['количество'], label='Фактические значения')
-plt.title('Прогнозирование объемов продаж')
-plt.xlabel('Дата')
-plt.ylabel('Количество продаж')
-plt.legend()
+plt.figure(figsize=(10, 6))
+plt.plot(daily_sales['дата покупки'], daily_sales['количество'], 'b-', alpha=0.7, linewidth=1.5, label='Фактические значения')
+plt.plot(daily_sales['дата покупки'], y_pred_all, 'r--', alpha=0.8, linewidth=1.5, label='Прогноз модели')
+
+# Добавляем вертикальную линию разделения
+train_size = len(X_train)
+plt.axvline(x=daily_sales['дата покупки'].iloc[train_size], color='green', linestyle=':', linewidth=2, label='Разделение на train/test')
+
+# Подсветка тестовой области
+test_start = daily_sales['дата покупки'].iloc[train_size]
+test_end = daily_sales['дата покупки'].iloc[-1]
+plt.axvspan(test_start, test_end, alpha=0.1, color='yellow', label='Тестовая область')
+
+plt.title('Прогнозирование объемов продаж авиабилетов', fontsize=14, fontweight='bold')
+plt.xlabel('Дата', fontsize=12)
+plt.ylabel('Количество продаж', fontsize=12)
+plt.legend(loc='best', fontsize=10)
+plt.grid(True, alpha=0.3)
+plt.tight_layout()
 plt.show()
