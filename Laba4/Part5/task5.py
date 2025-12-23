@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_absolute_error, mean_squared_error
 import sys
 
 sys.setrecursionlimit(10000)
@@ -53,6 +52,11 @@ print(monthly_sales)
 
 # Анализ по точкам реализации
 print("\n=== АНАЛИЗ ПО ТОЧКАМ РЕАЛИЗАЦИИ ===")
+
+# Получаем список всех уникальных точек
+all_points = df['точка'].unique()
+print(f"Всего точек реализации: {len(all_points)}")
+print(f"Список точек: {all_points}")
 
 # Информация об объемах продажах по точкам
 point_analysis_sales = df.groupby('точка').agg({'Продажи': ['sum', 'mean', 'std']}).round(2).reset_index()
@@ -111,6 +115,66 @@ table.set_fontsize(10)
 table.scale(1.2, 1.5)  # Масштабирование таблицы
 plt.title('Статистика прибыли по точкам', fontsize=16, fontweight='bold', pad=20)
 plt.tight_layout()
+plt.show()
+
+# Создаем пустые словари данных для хранения результатов
+point_sales_dynamic = {}
+point_qnt_dynamic = {}
+pont_profit_dynamic = {}
+
+# Собираем данные по каждой точке
+for point in all_points:
+    # Фильтруем данные для текущей точки
+    point_data = df[df['точка'] == point]
+    
+    # Группируем по месяцам и считаем сумму для каждой точки
+    point_sales_dynamic[point] = point_data.groupby(df['Дата'].dt.to_period('M'))['Продажи'].sum()
+    point_qnt_dynamic[point] = point_data.groupby(df['Дата'].dt.to_period('M'))['Количество'].sum()
+    pont_profit_dynamic[point] = point_data.groupby(df['Дата'].dt.to_period('M'))['Прибыль'].sum()
+
+# Динамика продаж по месяцам
+plt.figure(figsize=(14, 7))
+
+for point in all_points:
+    if point in point_sales_dynamic:
+        plt.plot(point_sales_dynamic[point].index.astype(str), point_sales_dynamic[point]/1e6, label=point, marker='o', alpha=0.9)
+
+plt.title('Динамика продаж по месяцам для точек реализации', fontsize=16, fontweight='bold', pad=25)
+plt.xlabel('Месяц', fontsize=14)
+plt.ylabel('Продажи (млн)', fontsize=14)
+plt.xticks(rotation=30)
+plt.grid(True, alpha=0.3)
+plt.legend()
+plt.show()
+
+# Динамика количества продаж по месяцам
+plt.figure(figsize=(14, 7))
+
+for point in all_points:
+    if point in point_qnt_dynamic:
+        plt.plot(point_qnt_dynamic[point].index.astype(str), point_qnt_dynamic[point], label=point, linewidth=2, marker='o', alpha=0.9)
+
+plt.title('Динамика количества продаж по месяцам для точек реализации', fontsize=16, fontweight='bold', pad=25)
+plt.xlabel('Месяц', fontsize=14)
+plt.ylabel('Количество продаж', fontsize=14)
+plt.xticks(rotation=30)
+plt.grid(True, alpha=0.3)
+plt.legend()
+plt.show()
+
+# Динамика прибыли по месяцам
+plt.figure(figsize=(14, 7))
+
+for point in all_points:
+    if point in pont_profit_dynamic:
+        plt.plot(pont_profit_dynamic[point].index.astype(str), pont_profit_dynamic[point], label=point, linewidth=2, marker='o', alpha=0.9)
+
+plt.title('Динамика прибыли по месяцам для точек реализации', fontsize=16, fontweight='bold', pad=25)
+plt.xlabel('Месяц', fontsize=14)
+plt.ylabel('Прибыль', fontsize=14)
+plt.xticks(rotation=30)
+plt.grid(True, alpha=0.3)
+plt.legend()
 plt.show()
 
 # Анализ по брендам
