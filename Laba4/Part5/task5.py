@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 import sys
-from openpyxl import load_workbook
 
 sys.setrecursionlimit(10000)
 
@@ -56,19 +55,63 @@ print(monthly_sales)
 print("\n=== АНАЛИЗ ПО ТОЧКАМ РЕАЛИЗАЦИИ ===")
 
 # Информация об объемах продажах по точкам
-point_analysis_sales = df.groupby('точка').agg({'Продажи': ['sum', 'mean', 'std']}).round(2)
-point_analysis_sales.columns = ['Общие продажи', 'Средние продажи', 'Стандартное отклонение продаж']
+point_analysis_sales = df.groupby('точка').agg({'Продажи': ['sum', 'mean', 'std']}).round(2).reset_index()
+point_analysis_sales.columns = ['Точка', 'Общие продажи(млн)', 'Средние продажи', 'Стандартное отклонение продаж']
+point_analysis_sales['Общие продажи(млн)'] = (point_analysis_sales['Общие продажи(млн)']/1e6).round(3)
 print(point_analysis_sales)
 
+fig, ax = plt.subplots(figsize=(10, 4))
+ax.axis('tight')
+ax.axis('off')
+table = ax.table(cellText=point_analysis_sales.values,
+                 colLabels=point_analysis_sales.columns,
+                 cellLoc='center',
+                 loc='center')
+table.auto_set_font_size(False)
+table.set_fontsize(10)
+table.scale(1.2, 1.5)  # Масштабирование таблицы
+plt.title('Статистика продаж по точкам', fontsize=16, fontweight='bold', pad=20)
+plt.tight_layout()
+plt.show()
+
 # Информация о количестве проданных товаров по точкам
-point_analysis_amount = df.groupby('точка').agg({'Количество': ['sum', 'mean', 'std']}).round(0)
-point_analysis_amount.columns = ['Общее количество проданных товаров', 'Средние количество проданных товаров', 'Стандартное отклонение количества проданных товаров']
+point_analysis_amount = df.groupby('точка').agg({'Количество': ['sum', 'mean', 'std']}).round(0).reset_index()
+point_analysis_amount.columns = ['Точка', 'Общее количество', 'Средние количество', 'Стандартное отклонение\nколичества проданных товаров']
 print(point_analysis_amount)
 
+fig, ax = plt.subplots(figsize=(10, 4))
+ax.axis('tight')
+ax.axis('off')
+table = ax.table(cellText=point_analysis_amount.values,
+                 colLabels=point_analysis_amount.columns,
+                 cellLoc='center',
+                 loc='center')
+table.auto_set_font_size(False)
+table.set_fontsize(10)
+table.scale(1.2, 1.5)  # Масштабирование таблицы
+plt.title('Статистика по количеству продаж по точкам', fontsize=16, fontweight='bold', pad=20)
+plt.tight_layout()
+plt.show()
+
 # Информация о прибыли по точкам
-point_analysis_profit = df.groupby('точка').agg({'Прибыль': ['sum', 'mean']}).round(2)
-point_analysis_profit.columns = ['Общая прибыль', 'Средняя прибыль']
+point_analysis_profit = df.groupby('точка').agg({'Прибыль': ['sum', 'mean']}).round(2).reset_index()
+point_analysis_profit.columns = ['Точка', 'Общая прибыль(млн)', 'Средняя прибыль']
+point_analysis_profit['Общая прибыль(млн)'] = (point_analysis_profit['Общая прибыль(млн)']/1e6).round(3)
 print(point_analysis_profit)
+
+fig, ax = plt.subplots(figsize=(10, 4))
+ax.axis('tight')
+ax.axis('off')
+table = ax.table(cellText=point_analysis_profit.values,
+                 colLabels=point_analysis_profit.columns,
+                 cellLoc='center',
+                 loc='center')
+table.auto_set_font_size(False)
+table.set_fontsize(10)
+table.scale(1.2, 1.5)  # Масштабирование таблицы
+plt.title('Статистика прибыли по точкам', fontsize=16, fontweight='bold', pad=20)
+plt.tight_layout()
+plt.show()
 
 # Анализ по брендам
 print("\n=== АНАЛИЗ ПО БРЕНДАМ ===")
@@ -235,8 +278,8 @@ def create_time_series(data, product_name=None):
     
     return time_series
 
-# Прогноз для топ-3 товаров
-top_3_products = df.groupby('товар')['Продажи'].sum().nlargest(3).index
+# Прогноз для топ-5 товаров
+top_5_products = df.groupby('товар')['Продажи'].sum().nlargest(5).index
 
 # Прогноз на будущие периоды
 total_sales_ts = create_time_series(df)
@@ -244,8 +287,8 @@ future_periods = 12
 last_time_index = total_sales_ts['time_index'].max()
 future_indices = np.array(range(last_time_index + 1, last_time_index + future_periods + 1)).reshape(-1, 1)
 
-fig, axes = plt.subplots(1, 3, figsize=(12, 6))
-for i, product in enumerate(top_3_products):
+for i, product in enumerate(top_5_products):
+    plt.figure(figsize=(8, 4))
     product_ts = create_time_series(df, product)
     
     if len(product_ts) > 4:  # минимальное количество точек для прогноза
@@ -259,13 +302,12 @@ for i, product in enumerate(top_3_products):
         # Прогноз
         future_product = product_model.predict(future_indices)
         
-        axes[i].plot(product_ts['time_index'], y_product/1e3, 'b-', marker='o', label='История')
-        axes[i].plot(future_indices, future_product/1e3, 'r--', marker='s', label='Прогноз')
-        axes[i].set_title(f'Прогноз для: {product}')
-        axes[i].set_xlabel('Временной индекс')
-        axes[i].set_ylabel('Продажи (тыс)')
-        axes[i].legend()
-        axes[i].grid(True)
-
-plt.tight_layout()
-plt.show()
+        plt.plot(product_ts['time_index'], y_product/1e3, 'b-', marker='o', label='История')
+        plt.plot(future_indices, future_product/1e3, 'r--', marker='s', label='Прогноз')
+        plt.title(f'Прогноз для: {product}')
+        plt.xlabel('Временной индекс')
+        plt.ylabel('Продажи (тыс)')
+        plt.legend()
+        plt.grid(True)
+        plt.tight_layout()
+        plt.show()
